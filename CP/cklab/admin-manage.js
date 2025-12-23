@@ -33,8 +33,7 @@ function renderPCTable() {
 
     let pcs = Array.isArray(DB.getPCs()) ? DB.getPCs() : [];
     
-    // ✅ แก้ไขตรงนี้: เปลี่ยนจากเรียงตาม ID เป็นเรียงตาม "ชื่อ" (Natural Sort)
-    // วิธีนี้จะทำให้ PC-01 มาก่อน PC-02 และ PC-2 มาก่อน PC-10 อย่างถูกต้อง
+    // เรียงตามชื่อ (Natural Sort)
     pcs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     tbody.innerHTML = '';
@@ -49,11 +48,12 @@ function renderPCTable() {
         const name = pc.name || 'Unknown';
         const status = pc.status || 'maintenance';
         
-        // ข้อมูลใหม่
         const type = pc.pcType === 'AI' 
             ? '<span class="badge bg-primary"><i class="bi bi-robot me-1"></i>AI Station</span>' 
             : '<span class="badge bg-secondary">General</span>';
-        const timeSlot = pc.timeSlot || '<span class="text-muted">-</span>';
+            
+        // แก้ไขตรงนี้: ไม่ดึง pc.timeSlot มาโชว์ แต่โชว์ว่ารองรับ All Day
+        const timeSlotDisplay = '<span class="badge bg-info text-dark bg-opacity-25 border border-info">All Day (4 Slots)</span>';
         
         let badgeClass = 'bg-secondary';
         if (status === 'available') badgeClass = 'bg-success';
@@ -76,7 +76,7 @@ function renderPCTable() {
                 <td><span class="fw-bold text-primary">${name}</span></td>
                 <td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td>
                 <td>${type}</td>
-                <td class="small">${timeSlot}</td>
+                <td class="small">${timeSlotDisplay}</td>
                 <td>${softBadges}</td>
                 <td class="text-end pe-4">
                     <button onclick="openPCModal('${id}')" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil-fill"></i></button>
@@ -97,8 +97,8 @@ function openPCModal(id = null) {
     document.getElementById('editPcId').value = '';
     document.getElementById('editPcName').value = '';
     document.getElementById('editPcStatus').value = 'available';
-    document.getElementById('editPcType').value = 'General'; // Default
-    document.getElementById('editPcTime').value = '';
+    document.getElementById('editPcType').value = 'General';
+    // ไม่ต้องเคลียร์ editPcTime เพราะเป็น readonly แล้ว
 
     // สร้าง Checkbox รอไว้
     renderSoftwareCheckboxes(id);
@@ -112,9 +112,8 @@ function openPCModal(id = null) {
             document.getElementById('editPcId').value = pc.id;
             document.getElementById('editPcName').value = pc.name;
             document.getElementById('editPcStatus').value = pc.status;
-            // ✅ ใส่ค่าเดิมกลับเข้าไป
             document.getElementById('editPcType').value = pc.pcType || 'General';
-            document.getElementById('editPcTime').value = pc.timeSlot || '';
+            // ไม่ต้องใส่ค่า timeSlot กลับ เพราะเราบังคับเป็น All Day
         }
     } else {
         // เพิ่มใหม่
@@ -171,12 +170,11 @@ function renderSoftwareCheckboxes(pcId) {
     });
 }
 
-// ✅ ฟังก์ชันปรับ UI เมื่อเลือก Type
+// ฟังก์ชันปรับ UI เมื่อเลือก Type
 function toggleSoftwareRequire() {
     const type = document.getElementById('editPcType').value;
     const box = document.getElementById('softwareCheckboxList').parentElement;
     
-    // ถ้าเป็น AI ให้ขอบกล่องเป็นสีน้ำเงิน เพื่อเน้นว่าต้องเลือก
     if (type === 'AI') {
         box.classList.add('border-primary', 'shadow-sm');
         box.classList.remove('border-0');
@@ -191,17 +189,16 @@ function savePC() {
     const id = document.getElementById('editPcId').value;
     const name = document.getElementById('editPcName').value.trim();
     const status = document.getElementById('editPcStatus').value;
-    // ✅ รับค่าใหม่
     const type = document.getElementById('editPcType').value;
-    const timeSlot = document.getElementById('editPcTime').value.trim();
+    
+    // แก้ไขตรงนี้: ไม่รับค่า Time Slot จาก Input แต่ Force ค่า Default
+    const timeSlot = "All Day"; 
 
     if (!name) { alert("กรุณาระบุชื่อเครื่อง"); return; }
 
-    // ดึงค่า Checkbox ที่ถูกเลือก
     const checkboxes = document.querySelectorAll('input[name="pcSoftware"]:checked');
     const selectedSoftware = Array.from(checkboxes).map(cb => cb.value);
 
-    // ✅ Validation: ถ้าเป็น AI ต้องเลือก Software อย่างน้อย 1 ตัว
     if (type === 'AI' && selectedSoftware.length === 0) {
         alert("⚠️ สำหรับเครื่องประเภท AI Workstation\nกรุณาเลือก Software/AI ที่ติดตั้งอย่างน้อย 1 รายการ");
         return; 
@@ -213,8 +210,8 @@ function savePC() {
     const pcData = {
         name, 
         status, 
-        pcType: type,       // บันทึก Type
-        timeSlot: timeSlot, // บันทึก Time Slot
+        pcType: type,       
+        timeSlot: timeSlot, // บันทึกเป็น All Day เสมอ
         installedSoftware: selectedSoftware
     };
 
@@ -222,7 +219,6 @@ function savePC() {
         // Update
         const index = pcs.findIndex(p => p.id == id);
         if (index !== -1) {
-            // Merge ข้อมูลเดิมเข้ากับข้อมูลใหม่
             pcs[index] = { ...pcs[index], ...pcData };
             
             if(status === 'available') { 
@@ -250,7 +246,6 @@ function savePC() {
     DB.savePCs(pcs);
     if(pcModal) pcModal.hide();
     renderPCTable();
-    // alert("บันทึกข้อมูลเรียบร้อย");
 }
 
 // --- 5. DELETE DATA (ลบ) ---
@@ -260,7 +255,6 @@ function deletePC(id) {
         pcs = pcs.filter(p => p.id !== id);
         DB.savePCs(pcs);
 
-        // ✅ เพิ่มส่วนนี้: ลบ Booking ที่ค้างอยู่ของเครื่องนี้ด้วย
         let bookings = DB.getBookings();
         const initialCount = bookings.length;
         bookings = bookings.filter(b => b.pcId !== id); 
@@ -270,6 +264,6 @@ function deletePC(id) {
             console.log(`Auto-deleted bookings for PC-${id}`);
         }
 
-        renderPCList();
+        renderPCTable(); // แก้ไขชื่อฟังก์ชันให้ถูกต้อง (เดิม renderPCList ซึ่งไม่มีอยู่จริงในไฟล์นี้)
     }
 }
