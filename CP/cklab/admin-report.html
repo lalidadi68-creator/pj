@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Reports & Analytics</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link href="main.css" rel="stylesheet">
+    <link href="admin.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+</head>
+<body class="bg-light">
+
+    <div class="d-flex">
+        
+        <div id="sidebar-container">
+            <a href="#" class="sidebar-brand"><i class="bi bi-shield-lock me-2"></i>Admin Panel</a>
+            <nav class="mt-3">
+                <a href="admin-monitor.html" class="nav-link-admin"><i class="bi bi-grid-fill"></i> Monitor</a>
+                <a href="admin-manage.html" class="nav-link-admin"><i class="bi bi-pc-display"></i> Manage PC</a>
+                <a href="admin-booking.html" class="nav-link-admin"><i class="bi bi-calendar-check-fill"></i> Booking</a>
+                <a href="admin-software.html" class="nav-link-admin"><i class="bi bi-robot"></i> Manage AI</a>
+                <a href="admin-config.html" class="nav-link-admin"><i class="bi bi-sliders"></i> System Config</a>
+                <a href="admin-report.html" class="nav-link-admin active"><i class="bi bi-file-earmark-bar-graph-fill"></i> Reports</a>
+                <div class="border-top my-3 mx-3"></div>
+                <a href="#" onclick="adminLogout()" class="nav-link-admin text-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
+            </nav>
+        </div>
+
+        <div class="flex-grow-1 p-4" style="height: 100vh; overflow-y: auto;">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold text-primary mb-1">📈 Reports & Analytics</h3>
+                    <p class="text-muted small mb-0">สรุปสถิติการใช้งานเครื่องคอมพิวเตอร์และ AI Tools</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="file" id="importLogFile" accept=".csv" class="d-none" onchange="handleLogImport(this)">
+                    
+                    <button onclick="document.getElementById('importLogFile').click()" class="btn btn-success shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV
+                    </button>
+
+                    <button onclick="exportAllLogs()" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Export All
+                    </button>
+
+                    <button onclick="window.print()" class="btn btn-secondary shadow-sm">
+                        <i class="bi bi-printer-fill me-1"></i> Print
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm bg-primary text-white overflow-hidden position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                            <i class="bi bi-people-fill" style="font-size: 8rem; line-height: 0;"></i>
+                        </div>
+                        <div class="card-body p-4 position-relative">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="text-white fw-bold text-uppercase mb-2" style="opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                        <i class="bi bi-bar-chart-fill me-2"></i>ยอดผู้เข้าใช้งานสะสมทั้งหมด (Total Visits)
+                                    </h6>
+                                    
+                                    <div class="d-flex align-items-baseline">
+                                        <h1 class="display-3 fw-bold mb-0 text-white" id="lifetimeTotalCount" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.3);">0</h1>
+                                        <span class="fs-3 text-white ms-2 fw-bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">คน</span>
+                                    </div>
+
+                                    <p class="mb-0 text-white small mt-2" style="opacity: 0.9;">*นับรวมทุก Log ตั้งแต่เริ่มใช้งานระบบจนถึงปัจจุบัน</p>
+                                </div>
+                                <div class="col-md-4 border-start border-white border-opacity-25 ps-md-4 mt-3 mt-md-0">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span><i class="bi bi-mortarboard-fill me-2"></i>ภายใน (Internal)</span>
+                                        <span class="fw-bold" id="lifetimeInternal">0</span>
+                                    </div>
+                                    <div class="progress bg-white bg-opacity-25" style="height: 6px;">
+                                        <div id="progInternal" class="progress-bar bg-white" style="width: 0%"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3 mb-2">
+                                        <span><i class="bi bi-building me-2"></i>ภายนอก (Guest)</span>
+                                        <span class="fw-bold" id="lifetimeExternal">0</span>
+                                    </div>
+                                    <div class="progress bg-white bg-opacity-25" style="height: 6px;">
+                                        <div id="progExternal" class="progress-bar bg-warning" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-cloud-download-fill me-2"></i>ดาวน์โหลดรายงาน (Quick Export)</h5>
+                            <span class="text-muted small">เลือกช่วงเวลาที่ต้องการดาวน์โหลดข้อมูลเป็นไฟล์ CSV</span>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-3 col-6">
+                                <button onclick="exportReport('daily')" class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm">
+                                    <i class="bi bi-calendar-check fs-2 mb-2"></i>
+                                    <span class="fw-bold">รายวัน</span>
+                                    <small class="text-muted">(Daily)</small>
+                                </button>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <button onclick="exportReport('monthly')" class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm">
+                                    <i class="bi bi-calendar-month fs-2 mb-2"></i>
+                                    <span class="fw-bold">รายเดือน</span>
+                                    <small class="text-muted">(Monthly)</small>
+                                </button>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <button onclick="exportReport('quarterly')" class="btn btn-outline-info w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm">
+                                    <i class="bi bi-calendar-range fs-2 mb-2"></i>
+                                    <span class="fw-bold">รายไตรมาส</span>
+                                    <small class="text-muted">(Quarterly)</small>
+                                </button>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <button onclick="exportReport('yearly')" class="btn btn-outline-warning text-dark w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 shadow-sm">
+                                    <i class="bi bi-calendar3 fs-2 mb-2"></i>
+                                    <span class="fw-bold" id="optYearly">รายปี</span>
+                                    <small class="text-muted">(Yearly)</small>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-funnel-fill me-2"></i>วิเคราะห์ข้อมูลเชิงลึก (Deep Analytics)</h6>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted mb-2">เลือกกลุ่มผู้ใช้งาน:</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="userTypeOption" id="typeAll" value="all" checked onchange="toggleFilterMode()">
+                            <label class="btn btn-outline-dark py-3" for="typeAll">
+                                <i class="bi bi-people-fill d-block fs-3 mb-1"></i> ทั้งหมด (All Users)
+                            </label>
+
+                            <input type="radio" class="btn-check" name="userTypeOption" id="typeStudent" value="student" onchange="toggleFilterMode()">
+                            <label class="btn btn-outline-primary py-3" for="typeStudent">
+                                <i class="bi bi-mortarboard-fill d-block fs-3 mb-1"></i> นักศึกษา
+                            </label>
+
+                            <input type="radio" class="btn-check" name="userTypeOption" id="typeStaff" value="staff" onchange="toggleFilterMode()">
+                            <label class="btn btn-outline-success py-3" for="typeStaff">
+                                <i class="bi bi-person-badge-fill d-block fs-3 mb-1"></i> บุคลากร
+                            </label>
+
+                            <input type="radio" class="btn-check" name="userTypeOption" id="typeExternal" value="external" onchange="toggleFilterMode()">
+                            <label class="btn btn-outline-secondary py-3" for="typeExternal">
+                                <i class="bi bi-globe d-block fs-3 mb-1"></i> บุคคลภายนอก
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="filter-all-section" class="filter-section bg-light p-3 rounded mb-4">
+                        <div class="alert alert-info mb-0 text-center">
+                            <i class="bi bi-info-circle-fill me-2"></i> แสดงข้อมูลผู้ใช้งานทุกประเภท (นักศึกษา, บุคลากร, บุคคลภายนอก)
+                        </div>
+                    </div>
+
+                    <div id="filter-student-section" class="filter-section bg-light p-3 rounded mb-4 d-none">
+                        <h6 class="fw-bold text-primary mb-3">ตัวกรองข้อมูลนักศึกษา</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">คณะ</label>
+                                <div id="studentFacultyList" class="scrollable-checkbox-list"></div>
+                                <div class="mt-1 text-end">
+                                    <small class="text-primary cursor-pointer fw-bold" onclick="toggleCheckAll('studentFacultyList')">เลือกทั้งหมด / ล้าง</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">ระดับการศึกษา</label>
+                                <select id="filterEduLevel" class="form-select" onchange="toggleStudentYearInputs()">
+                                    <option value="all">-- ทั้งหมด --</option>
+                                    <option value="ปริญญาตรี">ปริญญาตรี</option>
+                                    <option value="ปริญญาโท">ปริญญาโท</option>
+                                    <option value="ปริญญาเอก">ปริญญาเอก</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3 d-none" id="filterYearContainer">
+                                <label class="form-label small fw-bold">ชั้นปี (เฉพาะ ป.ตรี)</label>
+                                <select id="filterStudentYear" class="form-select">
+                                    <option value="all">-- ทุกชั้นปี --</option>
+                                    <option value="1">ปี 1</option>
+                                    <option value="2">ปี 2</option>
+                                    <option value="3">ปี 3</option>
+                                    <option value="4">ปี 4</option>
+                                    <option value="5">ปี 5</option>
+                                    <option value="6">ปี 6</option>
+                                    <option value="7">ปี 7</option>
+                                    <option value="8">ปี 8</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="filter-staff-section" class="filter-section bg-light p-3 rounded mb-4 d-none">
+                        <h6 class="fw-bold text-success mb-3">ตัวกรองข้อมูลบุคลากร</h6>
+                        <div class="row">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">หน่วยงาน</label>
+                                <div id="staffOrgList" class="scrollable-checkbox-list"></div>
+                                <div class="mt-1 text-end">
+                                    <small class="text-success cursor-pointer fw-bold" onclick="toggleCheckAll('staffOrgList')">เลือกทั้งหมด / ล้าง</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="filter-external-section" class="filter-section bg-light p-3 rounded mb-4 d-none">
+                        <div class="alert alert-secondary mb-0"><i class="bi bi-info-circle-fill me-2"></i> สถิติบุคคลภายนอกจะสรุปภาพรวมทั้งหมด</div>
+                    </div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">รูปแบบเวลา</label>
+                            <select id="timeFilterType" class="form-select bg-white text-primary fw-bold" onchange="toggleTimeInputs()">
+                                <option value="daily">รายวัน</option>
+                                <option value="monthly">รายเดือน</option>
+                                <option value="yearly">รายปี</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 time-input-group" id="input-daily">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">จาก</span>
+                                <input type="date" id="dateStart" class="form-control">
+                                <span class="input-group-text bg-white">ถึง</span>
+                                <input type="date" id="dateEnd" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6 time-input-group d-none" id="input-monthly">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">เดือน</span>
+                                <input type="month" id="monthStart" class="form-control">
+                                <span class="input-group-text bg-white">ถึง</span>
+                                <input type="month" id="monthEnd" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6 time-input-group d-none" id="input-yearly">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">ปี พ.ศ.</span>
+                                <select id="yearStart" class="form-select"></select>
+                                <span class="input-group-text bg-white">ถึง</span>
+                                <select id="yearEnd" class="form-select"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button onclick="generateReport()" class="btn btn-primary w-100 fw-bold shadow-sm">
+                                <i class="bi bi-search me-2"></i> ประมวลผล
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white border-0 shadow-sm h-100">
+                        <div class="card-body p-3">
+                            <h6 class="text-white text-uppercase fw-bold mb-2" style="font-size: 0.85rem; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                <i class="bi bi-people-fill me-2"></i>ผู้ใช้งาน (Users)
+                            </h6>
+                            <h2 class="fw-bold mb-0 text-white" id="resultUserCount" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.25);">0</h2>
+                            <small class="text-white" style="opacity: 0.9;">คน (ตามเงื่อนไข)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white border-0 shadow-sm h-100">
+                        <div class="card-body p-3">
+                            <h6 class="text-white text-uppercase fw-bold mb-2" style="font-size: 0.85rem; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>เข้าใช้งาน (Sessions)
+                            </h6>
+                            <h2 class="fw-bold mb-0 text-white" id="resultSessionCount" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.25);">0</h2>
+                            <small class="text-white" style="opacity: 0.9;">ครั้ง</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white border-0 shadow-sm h-100">
+                        <div class="card-body p-3">
+                            <h6 class="text-white text-uppercase fw-bold mb-2" style="font-size: 0.85rem; opacity: 0.95; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                <i class="bi bi-clock-history me-2"></i>เวลารวม (Hours)
+                            </h6>
+                            <h2 class="fw-bold mb-0 text-white" id="resultTotalHours" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.25);">0</h2>
+                            <small class="text-white" style="opacity: 0.9;">ชั่วโมง</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm p-3">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-bar-chart-fill me-2"></i> การกระจายตัวตามกลุ่มผู้ใช้</h6>
+                        <div class="bg-light p-3 rounded" style="height: 350px;">
+                            <canvas id="distributionBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm p-3">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-graph-up me-2"></i> แนวโน้มผู้เข้าใช้งานทั้งหมด</h6>
+                        <div class="bg-light p-3 rounded" style="height: 350px;">
+                            <canvas id="dailyTrendLineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <h6 class="fw-bold text-dark mb-3">🏆 10 อันดับ Software/AI ยอดนิยม</h6>
+                        <div class="d-flex justify-content-center" style="height: 300px;">
+                            <canvas id="topSoftwareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <h6 class="fw-bold text-dark mb-3"> ใช้งาน AI vs ใช้งานทั่วไป</h6>
+                        <div class="d-flex justify-content-center" style="max-height: 300px;">
+                            <canvas id="aiUsagePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <h6 class="fw-bold text-dark mb-3"> คะแนนความพึงพอใจ (Satisfaction)</h6>
+                        <div class="card-body p-0">
+                            <div class="d-flex align-items-end mb-3">
+                                <h1 class="fw-bold text-warning mb-0 me-3" style="font-size: 3.5rem;" id="satisfactionAvgScore">0.0</h1>
+                                <div class="mb-2">
+                                    <div class="text-warning fs-5" id="satisfactionStars"></div>
+                                    <span class="text-muted small" id="satisfactionTotalCount">จาก 0 คน</span>
+                                </div>
+                            </div>
+                            <div id="satisfactionProgressBars" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark mb-0">ข้อเสนอแนะล่าสุด (Recent Feedback)</h6>
+                            <span class="badge bg-primary rounded-pill px-3" id="commentCount">0</span>
+                        </div>
+                        <div class="bg-light p-3 rounded custom-scrollbar" style="height: 300px; overflow-y: auto;">
+                            <div id="feedbackCommentList" class="d-flex flex-column gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm p-3">
+                        <h6 class="fw-bold text-dark mb-3"> ประวัติการใช้งานโดยละเอียด (Log History)</h6>
+                        <div class="table-responsive rounded-3 border">
+                            <table class="table table-custom table-bordered align-middle mb-0 table-hover">
+                                <thead class="sticky-top shadow-sm bg-white">
+                                    <tr class="text-center">
+                                        <th>#</th>
+                                        <th>รหัสผู้ใช้</th>
+                                        <th>ชื่อ-สกุล</th>
+                                        <th>Software</th>
+                                        <th>วันที่</th>
+                                        <th>เวลา</th>
+                                        <th>คณะ/หน่วยงาน</th>
+                                        <th>ชั้นปี</th> <th>สถานะ</th>
+                                        <th>PC</th>
+                                        <th>คะแนน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logHistoryTableBody" class="text-center"></tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <div class="small text-muted" id="paginationInfo">แสดง 0 - 0 จาก 0 รายการ</div>
+                            <nav aria-label="Log pagination">
+                                <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="mock-db.js"></script>
+    <script src="admin-report.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentYear = new Date().getFullYear();
+            const yearOpt = document.getElementById('optYearly');
+            if(yearOpt) yearOpt.innerText = `รายปี (2025-${currentYear})`;
+        });
+
+        function adminLogout() {
+            if(confirm('ยืนยันออกจากระบบ?')) {
+                DB.clearSession();
+                window.location.href = 'admin-login.html';
+            }
+        }
+    </script>
+</body>
+</html>
