@@ -88,7 +88,11 @@ function drawDistributionBarChart(data) {
     });
 }
 
-function drawDailyTrendLineChart(dailyData, timeMode) {
+// admin-report.js
+
+/* admin-report.js */
+
+function drawDailyTrendLineChart(dailyData, timeMode, isSingleYear = false) {
     const ctx = document.getElementById('dailyTrendLineChart');
     if (!ctx) return;
     if (dailyTrendLineInstance) dailyTrendLineInstance.destroy();
@@ -97,10 +101,27 @@ function drawDailyTrendLineChart(dailyData, timeMode) {
     let dataPoints = [];
 
     if (timeMode === 'yearly') {
-        labels = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        dataPoints = labels.map(month => dailyData[month] || 0);
+        if (isSingleYear) {
+            // ✅ กรณีเลือกปีเดียว: โชว์รายเดือน (ม.ค. - ธ.ค.)
+            labels = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            dataPoints = labels.map(month => dailyData[month] || 0);
+        } else {
+            // ✅ กรณีเลือกหลายปี: วนลูปสร้างปีให้ครบช่วง (แม้ไม่มีข้อมูลก็ต้องขึ้น 0)
+            const yStart = parseInt(document.getElementById('yearStart').value); // ค่าปี ค.ศ. (เช่น 2024)
+            const yEnd = parseInt(document.getElementById('yearEnd').value);     // ค่าปี ค.ศ. (เช่น 2026)
+
+            // วนลูปตั้งแต่ปีเริ่มต้น ถึง ปีสิ้นสุด
+            for (let y = yStart; y <= yEnd; y++) {
+                const bYear = y + 543; // แปลงเป็น พ.ศ.
+                const key = bYear.toString();
+                
+                labels.push(key); // แกน X: 2567, 2568, 2569
+                dataPoints.push(dailyData[key] || 0); // แกน Y: ถ้าไม่มีข้อมูลให้ใส่ 0
+            }
+        }
     } 
     else if (timeMode === 'daily' || timeMode === 'monthly') {
+        // ... (ส่วนรายวันและรายเดือน ใช้โค้ดเดิมได้เลยครับ)
         let startD, endD;
         if (timeMode === 'daily') {
             startD = new Date(document.getElementById('dateStart').value);
@@ -139,7 +160,7 @@ function drawDailyTrendLineChart(dailyData, timeMode) {
                 backgroundColor: 'rgba(29, 115, 242, 0.1)',
                 borderWidth: 3,
                 fill: true,
-                tension: 0,
+                tension: 0, 
                 pointBackgroundColor: '#1d73f2',
                 pointRadius: 4
             }]
@@ -307,6 +328,8 @@ function generateReport() {
     applyFilters(); 
 }
 
+// admin-report.js
+
 function applyFilters() { 
     // 1. ดึงข้อมูล Log ทั้งหมดที่สิ้นสุดการใช้งานแล้ว
     const allStatsLogs = allLogs.filter(l => l.action === 'END_SESSION');
@@ -317,6 +340,14 @@ function applyFilters() {
     const timeMode = document.getElementById('timeFilterType').value;
     const selectedFaculties = getCheckedValues('studentFacultyList');
     const selectedOrgs = getCheckedValues('staffOrgList');
+
+    // ✅ เพิ่มตัวเช็คว่าเลือกปีเดียวหรือไม่
+    let isSingleYear = false;
+    if (timeMode === 'yearly') {
+        const yStart = document.getElementById('yearStart').value;
+        const yEnd = document.getElementById('yearEnd').value;
+        if (yStart === yEnd) isSingleYear = true;
+    }
 
     // 3. กรองข้อมูลตามเงื่อนไข
     let filteredLogs = allStatsLogs.filter(log => {
@@ -346,15 +377,11 @@ function applyFilters() {
 
         const role = (log.userRole || '').toLowerCase();
         
-        // ✅ [MERGED LOGIC] กรองนักศึกษาแบบแยก ป.ตรี/ชั้นปี
         if (userMode === 'student') {
             if (role !== 'student') return false;
-            
-            // 1. ตรวจสอบคณะ
             const isFacultyMatch = selectedFaculties.some(fac => fac.trim() === logFaculty);
             if (!isFacultyMatch) return false;
 
-            // 2. ตรวจสอบ ระดับการศึกษา และ ชั้นปี
             const filterLevel = document.getElementById('filterEduLevel').value;
             const filterYear = document.getElementById('filterStudentYear').value;
             const userLevel = (log.userLevel || "").toString().trim();
@@ -362,7 +389,6 @@ function applyFilters() {
 
             if (filterLevel !== 'all') {
                 if (userLevel !== filterLevel) return false;
-                // ถ้าเป็น ป.ตรี และมีการเลือกชั้นปีเจาะจง
                 if (filterLevel === 'ปริญญาตรี' && filterYear !== 'all') {
                     if (userYear !== filterYear) return false;
                 }
@@ -398,10 +424,18 @@ function applyFilters() {
 
         const dateObj = new Date(l.startTime || l.timestamp);
         let timeLabel;
+
+        // ✅ Logic การสร้าง Label ตามเงื่อนไขใหม่
         if (timeMode === 'daily' || timeMode === 'monthly') {
             timeLabel = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
         } else if (timeMode === 'yearly') {
-            timeLabel = dateObj.toLocaleDateString('th-TH', { month: 'long' });
+            if (isSingleYear) {
+                // ถ้าปีเดียว ให้โชว์เป็นชื่อเดือน
+                timeLabel = dateObj.toLocaleDateString('th-TH', { month: 'long' });
+            } else {
+                // ถ้าหลายปี ให้โชว์เป็นเลขปี พ.ศ.
+                timeLabel = (dateObj.getFullYear() + 543).toString();
+            }
         }
         timeChartData[timeLabel] = (timeChartData[timeLabel] || 0) + 1;
     });
@@ -409,7 +443,9 @@ function applyFilters() {
     // 5. อัปเดตส่วนต่าง ๆ
     updateSummaryCards(filteredLogs);
     drawDistributionBarChart(distributionData);
-    drawDailyTrendLineChart(timeChartData, timeMode);
+    
+    // ✅ ส่งตัวแปร isSingleYear ไปด้วย
+    drawDailyTrendLineChart(timeChartData, timeMode, isSingleYear);
 
     const globalChartData = processLogsForCharts(filteredLogs, timeMode);
     if (topSoftwareChartInstance) topSoftwareChartInstance.destroy();
@@ -885,6 +921,53 @@ function renderFeedbackComments(logs) {
     }).join('');
 }
 
+/* ในไฟล์ admin-report.js */
+
+function downloadLogTemplate() {
+    // 1. กำหนดหัวตารางให้ตรงกับที่ฟังก์ชัน Import (processLogCSV) ต้องการ
+    const headers = [
+        "ลำดับ", 
+        "รหัสผู้ใช้งาน", 
+        "ชื่อ-สกุล", 
+        "AI/Software ที่ใช้", 
+        "วันที่ใช้บริการ", 
+        "ช่วงเวลาใช้บริการ", 
+        "รหัสคณะ/สำนัก", 
+        "สถานะ", 
+        "PC ที่ใช้", 
+        "ระยะเวลา (นาที)", 
+        "ความพึงพอใจ (Score)"
+    ];
+
+    // 2. สร้างข้อมูลตัวอย่าง 2 แถว
+    const sampleRows = [
+        ["1", "66123456", "นายสมชาย ตัวอย่าง", "VS Code; ChatGPT", "17/01/2026", "09:00 - 10:30", "คณะวิทยาศาสตร์", "นักศึกษา", "PC-01", "90", "5"],
+        ["2", "guest001", "นางสมหญิง ทดสอบ", "-", "17/01/2026", "13:00 - 14:00", "บุคคลภายนอก", "บุคคลภายนอก", "PC-05", "60", "4"]
+    ];
+
+    // 3. ประกอบร่าง CSV (ใส่ BOM \uFEFF เพื่อให้ Excel อ่านภาษาไทยออก)
+    let csvContent = "\uFEFF" + headers.join(",") + "\n";
+
+    sampleRows.forEach(row => {
+        // ครอบเครื่องหมายคำพูดถ้าข้อมูลมีจุลภาค (,) ป้องกัน CSV เพี้ยน
+        const safeRow = row.map(cell => cell.includes(',') ? `"${cell}"` : cell);
+        csvContent += safeRow.join(",") + "\n";
+    });
+
+    // 4. สั่งดาวน์โหลดไฟล์
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", "CKLab_Log_Template.csv"); // ชื่อไฟล์ที่ได้
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 function exportReport(mode) {
     const modeNames = { 'daily': 'รายวัน (Daily)', 'monthly': 'รายเดือน (Monthly)', 'quarterly': 'รายไตรมาส (Quarterly)', 'yearly': 'รายปี (Yearly)' };
     const selectedModeName = modeNames[mode] || mode;
@@ -906,14 +989,36 @@ function exportReport(mode) {
 }
 
 function exportAllLogs() {
-    if (!allLogs || allLogs.length === 0) {
-        alert("ไม่มีข้อมูล Log ในระบบ");
+    // ✅ 1. เปลี่ยนแหล่งข้อมูล: ใช้ filteredLogsGlobal (ข้อมูลที่ผ่านการกรองและแสดงผลอยู่) 
+    // ถ้าไม่มีข้อมูลกรอง ให้กันพลาดด้วยการใช้ allLogs หรือ array ว่าง
+    const dataToExport = (typeof filteredLogsGlobal !== 'undefined' && filteredLogsGlobal.length > 0) 
+                         ? filteredLogsGlobal 
+                         : [];
+
+    if (dataToExport.length === 0) {
+        alert("ไม่พบข้อมูลตามเงื่อนไขที่กำหนด (0 รายการ)");
         return;
     }
-    if (!confirm(`ยืนยันการ Export ข้อมูล Log ทั้งหมด (${allLogs.length} รายการ)?`)) return;
+
+    // ✅ 2. ตรวจสอบว่าตอนนี้เป็นข้อมูล "ทั้งหมด" หรือ "ข้อมูลกรอง" เพื่อปรับข้อความยืนยัน
+    // ถ้าจำนวนข้อมูลที่จะโหลด ไม่เท่ากับ ข้อมูลทั้งหมดในระบบ แสดงว่ามีการกรองอยู่
+    const isFiltered = dataToExport.length !== allLogs.length;
+    
+    const confirmMsg = isFiltered
+        ? `ยืนยันการ Export ข้อมูลตามตัวกรองปัจจุบัน (${dataToExport.length} รายการ)?`
+        : `ยืนยันการ Export ข้อมูลทั้งหมดในระบบ (${dataToExport.length} รายการ)?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // ✅ 3. ตั้งชื่อไฟล์ให้สื่อความหมาย
     const now = new Date();
-    const fileName = `CKLab_Logs_Backup_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours()}${now.getMinutes()}`;
-    createCSVFile(allLogs, fileName);
+    // ถ้ากรองอยู่ ให้ใส่คำว่า Filtered_Report ถ้าไม่กรอง ให้ใช้ Full_Report
+    const fileTag = isFiltered ? "Filtered_Report" : "Full_Report";
+    
+    const fileName = `CKLab_${fileTag}_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours()}${now.getMinutes()}`;
+
+    // ส่งข้อมูลชุดนี้ไปสร้าง CSV
+    createCSVFile(dataToExport, fileName);
 }
 
 function generateCSV(startDateObj, endDateObj, fileNamePrefix) {

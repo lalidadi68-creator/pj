@@ -1,10 +1,10 @@
-/* mock-db.js (Enhanced Data for Full Reporting) */
+/* mock-db.js (Final Clean: Removed CodeName) */
 
 // ==========================================
 // 1. MOCK DATA (ข้อมูลจำลอง)
 // ==========================================
 
-// ✅ 1.0 ข้อมูลรอบเวลา
+// 1.0 ข้อมูลรอบเวลา
 const DEFAULT_AI_SLOTS = [
     { id: 1, start: "09:00", end: "10:30", label: "09:00 - 10:30", active: true },
     { id: 2, start: "10:30", end: "12:00", label: "10:30 - 12:00", active: true },
@@ -26,7 +26,7 @@ const DEFAULT_BOOKINGS = [
     },
     { 
         id: 'b2', 
-        userId: 'External', userName: 'คุณวิชัย (Guest)', 
+        userId: '67200000', userName: 'ผู้มาเยือน', 
         pcId: '5', pcName: 'PC-05', 
         date: new Date().toLocaleDateString('en-CA'), 
         startTime: '13:00', endTime: '15:00', 
@@ -35,7 +35,7 @@ const DEFAULT_BOOKINGS = [
     }
 ];
 
-// 1.2 ข้อมูล Software/AI Library (รายการครบถ้วน)
+// 1.2 ข้อมูล Software/AI Library
 const DEFAULT_SOFTWARE = [
     { id: "s1", name: "ChatGPT", version: "Plus", type: "AI" },
     { id: "s2", name: "Claude", version: "Pro", type: "AI" },
@@ -45,37 +45,42 @@ const DEFAULT_SOFTWARE = [
     { id: "s6", name: "Grammarly", version: "Pro", type: "AI" },
     { id: "s7", name: "Botnoi VOICE", version: "Premium", type: "AI" },
     { id: "s8", name: "Gamma", version: "Pro", type: "AI" },
-    { id: "s9", name: "Canva", version: "Pro", type: "Software" },
-    { id: "s10", name: "Microsoft Office", version: "365", type: "Software" },
-    { id: "s11", name: "Adobe Photoshop", version: "CC", type: "Software" },
-    { id: "s12", name: "VS Code", version: "Latest", type: "Software" }
+    { id: "s9", name: "Canva", version: "Pro", type: "Software" }
 ];
 
-// 1.3 ข้อมูลเครื่องคอมพิวเตอร์
+// 1.3 ข้อมูลเครื่องคอมพิวเตอร์ (❌ ลบ CodeName ออกแล้ว)
 const DEFAULT_PCS = [
     { 
         id: "1", name: "PC-01", status: "available", 
-        installedSoftware: ["ChatGPT (Plus)", "Claude (Pro)", "Perplexity (Pro)", "VS Code"] 
+        installedSoftware: ["ChatGPT (Plus)"] 
     },
     { 
         id: "2", name: "PC-02", status: "in_use", currentUser: "สมชาย รักเรียน", startTime: Date.now() - 3600000, 
-        installedSoftware: ["Midjourney (Basic)", "Canva (Pro)", "Gamma (Pro)", "Adobe Photoshop"] 
+        installedSoftware: ["Claude (Pro)"] 
     },
     { 
         id: "3", name: "PC-03", status: "available", 
-        installedSoftware: ["SciSpace (Premium)", "Grammarly (Pro)", "ChatGPT (Plus)", "Microsoft Office"] 
+        installedSoftware: ["Perplexity (Pro)"] 
     },
     { 
         id: "4", name: "PC-04", status: "available", 
-        installedSoftware: ["Botnoi VOICE (Premium)", "Canva (Pro)", "Microsoft Office"] 
+        installedSoftware: ["SciSpace (Premium)"] 
     },
     { 
         id: "5", name: "PC-05", status: "available", 
-        installedSoftware: ["ChatGPT (Plus)", "Claude (Pro)", "Midjourney (Basic)", "VS Code"] 
+        installedSoftware: ["Midjourney (Basic)"] 
     },
     { 
         id: "6", name: "PC-06", status: "reserved", 
-        installedSoftware: ["Perplexity (Pro)", "SciSpace (Premium)", "Adobe Photoshop"] 
+        installedSoftware: ["Canva (Pro)"] 
+    },
+    { 
+        id: "7", name: "PC-07", status: "available", 
+        installedSoftware: ["Botnoi VOICE (Premium)"] 
+    },
+    { 
+        id: "8", name: "PC-08", status: "available", 
+        installedSoftware: ["Gamma (Pro)"] 
     }
 ];
 
@@ -100,13 +105,15 @@ const DEFAULT_GENERAL_CONFIG = {
 };
 
 
-// 1.7 จำลอง External System: REG API (ข้อมูลหลากหลายคณะ)
+// 1.7 จำลอง External System: REG API
 const MOCK_REG_DB = {
     "66123456": { prefix: "นาย", name: "สมชาย รักเรียน", faculty: "คณะวิศวกรรมศาสตร์", department: "คอมพิวเตอร์", year: "3", level: "ปริญญาตรี", role: "student" },
     "66112233": { prefix: "นางสาว", name: "มานี มีปัญญา", faculty: "คณะวิทยาศาสตร์", department: "วิทยาการคอมพิวเตอร์", year: "2", level: "ปริญญาตรี", role: "student" },
     "66100000": { prefix: "นาย", name: "เอกภพ มั่นคง", faculty: "คณะศิลปศาสตร์", department: "ภาษาไทย", year: "4", level: "ปริญญาตรี", role: "student" },
     "66100001": { prefix: "นางสาว", name: "ดวงดาว ไกลโพ้น", faculty: "คณะศึกษาศาสตร์", department: "คณิตศาสตร์", year: "1", level: "ปริญญาตรี", role: "student" },
-    "67200000": { prefix: "นาย", name: "ผู้มาเยือน", faculty: "บุคคลภายนอก", department: "-", year: "-", level: "บุคคลทั่วไป", role: "external" },
+    
+    "67200000": { prefix: "นาย", name: "ผู้มาเยือน", faculty: "บุคคลภายนอก", department: "-", year: "-", level: "บุคคลภายนอก", role: "external" },
+    
     "ubu_staff": { prefix: "ดร.", name: "ใจดี มีวิชา", faculty: "สำนักคอมพิวเตอร์และเครือข่าย", department: "-", year: "-", level: "บุคลากร", role: "staff" },
     "staff_karnklang": { prefix: "นาย", name: "บุคลากร กองกลาง", faculty: "กองกลาง", year: "-", level: "บุคลากร", role: "staff" },
     "staff_personel": { prefix: "นาง", name: "เจ้าหน้าที่ กองการเจ้าหน้าที่", faculty: "กองการเจ้าหน้าที่", year: "-", level: "บุคลากร", role: "staff" },
@@ -148,61 +155,43 @@ const MOCK_REG_DB = {
 
 
 // ==========================================
-// 1.8 LOG GENERATION LOGIC (ส่วนสำคัญสำหรับ Report)
+// 1.8 LOG GENERATION LOGIC
 // ==========================================
 const MOCK_REG_DB_USERS_FOR_LOG = Object.values(MOCK_REG_DB); 
 
-// ฟังก์ชันสร้าง Log จำลองแบบกระจายตัวสมจริง
 function generateRichMockLogs(count) {
     let logs = [];
-    const softwareList = DEFAULT_SOFTWARE.map(s => s.name);
     
-    // ตั้งค่าช่วงเวลา (ย้อนหลัง 3 เดือน)
     const today = new Date();
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(today.getMonth() - 3);
 
     for (let i = 0; i < count; i++) {
-        // 1. สุ่ม User
         const user = MOCK_REG_DB_USERS_FOR_LOG[Math.floor(Math.random() * MOCK_REG_DB_USERS_FOR_LOG.length)];
         const userId = Object.keys(MOCK_REG_DB).find(key => MOCK_REG_DB[key] === user);
         
-        // 2. สุ่ม PC
+        // สุ่ม PC
         const targetPC = DEFAULT_PCS[Math.floor(Math.random() * DEFAULT_PCS.length)];
         
-        // 3. สุ่มวันเวลา (ให้มีความถี่ในช่วงวันธรรมดา และเวลาราชการมากกว่า)
+        // วันเวลา
         let logDate = new Date(threeMonthsAgo.getTime() + Math.random() * (today.getTime() - threeMonthsAgo.getTime()));
-        
-        // ปรับเวลาให้สมจริง (08:00 - 18:00)
         logDate.setHours(8 + Math.floor(Math.random() * 10)); 
         logDate.setMinutes(Math.floor(Math.random() * 60));
 
-        // 4. สุ่ม Software ที่ใช้ (0-3 รายการ)
-        let usedSoftwareLog = [];
-        let isAILog = false;
+        // Software ที่ใช้ = Software ที่มีในเครื่องนั้นๆ เท่านั้น (1 เครื่อง 1 ตัว)
+        const usedSoftwareLog = targetPC.installedSoftware || [];
         
-        // โอกาส 70% ที่จะมีการใช้ Software
-        if (Math.random() > 0.3) {
-            const numApps = Math.floor(Math.random() * 3) + 1; // 1-3 apps
-            for (let j = 0; j < numApps; j++) {
-                const app = softwareList[Math.floor(Math.random() * softwareList.length)];
-                if (!usedSoftwareLog.includes(app)) {
-                    usedSoftwareLog.push(app);
-                    
-                    // เช็คว่าเป็น AI หรือไม่
-                    const swObj = DEFAULT_SOFTWARE.find(s => s.name === app);
-                    if (swObj && swObj.type === 'AI') isAILog = true;
-                }
-            }
+        // เช็คว่า Software นั้นเป็น AI หรือไม่
+        let isAILog = false;
+        if(usedSoftwareLog.length > 0) {
+            const swName = usedSoftwareLog[0].split('(')[0].trim();
+            const swObj = DEFAULT_SOFTWARE.find(s => s.name === swName);
+            if (swObj && swObj.type === 'AI') isAILog = true;
         }
 
-        // 5. คำนวณระยะเวลา (15 นาที - 3 ชั่วโมง)
         const durationMinutes = Math.floor(Math.random() * 165) + 15;
-        
-        // เวลาเริ่ม = เวลาจบ (timestamp) - ระยะเวลา
         const startTime = new Date(logDate.getTime() - (durationMinutes * 60 * 1000));
 
-        // 6. คะแนนความพึงพอใจ (เน้น 4-5)
         const rand = Math.random();
         let score = 5;
         if (rand < 0.1) score = 3;
@@ -210,34 +199,33 @@ function generateRichMockLogs(count) {
         else score = 5;
 
         logs.push({
-            timestamp: logDate.toISOString(), // เวลาจบ (ใช้เป็น Time Reference หลัก)
+            timestamp: logDate.toISOString(),
             action: 'END_SESSION',
             userId: userId,
             userName: user.name,
             userFaculty: user.faculty,
+            // เพิ่ม userLevel และ userYear เพื่อให้ Filter หน้า Report ทำงานได้
             userLevel: user.level,
             userYear: user.year,
             userRole: user.role,
             pcId: targetPC.id,
             startTime: startTime.toISOString(),
             durationMinutes: durationMinutes,
-            usedSoftware: usedSoftwareLog,
+            usedSoftware: usedSoftwareLog, 
             isAIUsed: isAILog,
             satisfactionScore: score,
             comment: Math.random() > 0.8 ? "ใช้งานได้ดีครับ" : ""
         });
     }
 
-    // เรียงลำดับตามเวลาล่าสุด
     return logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
-// 🔥 สร้าง Log จำนวน 500 รายการ เพื่อให้กราฟสวยงาม
 const DEFAULT_LOGS = generateRichMockLogs(500);
 
 
 // ==========================================
-// 2. DATABASE LOGIC (ระบบจัดการข้อมูล)
+// 2. DATABASE LOGIC (❌ ลบ Logic Auto Sync CodeName ออกแล้ว)
 // ==========================================
 
 const DB = {
@@ -247,15 +235,13 @@ const DB = {
     },
     setData: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
 
-    // 2.1 จัดการ Time Slots
     getAiTimeSlots: () => DB.getData('ck_ai_slots', DEFAULT_AI_SLOTS),
     saveAiTimeSlots: (data) => DB.setData('ck_ai_slots', data),
 
-    // PC Management
+    // ใช้แบบธรรมดาเหมือนเดิม
     getPCs: () => DB.getData('ck_pcs', DEFAULT_PCS),
     savePCs: (data) => DB.setData('ck_pcs', data),
     
-    // Update PC Status
     updatePCStatus: (id, status, user = null, options = {}) => {
         let pcs = DB.getPCs();
         let pc = pcs.find(p => String(p.id) === String(id));
@@ -263,16 +249,11 @@ const DB = {
             pc.status = status;
             pc.currentUser = user;
             pc.startTime = (status === 'in_use') ? Date.now() : null;
-            
-            if (options) {
-                Object.assign(pc, options);
-            }
-            
+            if (options) Object.assign(pc, options);
             DB.savePCs(pcs);
         }
     },
 
-    // Booking Management
     getBookings: () => DB.getData('ck_bookings', DEFAULT_BOOKINGS),
     saveBookings: (data) => DB.setData('ck_bookings', data),
 
@@ -285,21 +266,17 @@ const DB = {
         }
     },
 
-    // Software Library
     getSoftwareLib: () => DB.getData('ck_software', DEFAULT_SOFTWARE),
     saveSoftwareLib: (data) => DB.setData('ck_software', data),
 
-    // Admin & Zone
     getAdmins: () => DB.getData('ck_admins', DEFAULT_ADMINS),
     saveAdmins: (data) => DB.setData('ck_admins', data),
     getZones: () => DB.getData('ck_zones', DEFAULT_ZONES),
     saveZones: (data) => DB.setData('ck_zones', data),
     
-    // General Config
     getGeneralConfig: () => DB.getData('ck_general_config', DEFAULT_GENERAL_CONFIG),
     saveGeneralConfig: (data) => DB.setData('ck_general_config', data),
 
-    // System
     checkRegAPI: (username) => MOCK_REG_DB[username],
     getSession: () => {
         const s = sessionStorage.getItem('ck_session');
@@ -311,7 +288,6 @@ const DB = {
     },
     clearSession: () => sessionStorage.removeItem('ck_session'),
 
-    // Logging
     saveLog: (logEntry) => {
         let logs = DB.getLogs(); 
         logs.push({ 
